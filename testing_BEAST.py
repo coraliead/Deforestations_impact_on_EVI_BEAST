@@ -40,6 +40,28 @@ EVI_month = EVI.time.dt.month.values
 EVI_yr = EVI.time.dt.year.values
 dt = []
 
+def CreateCumulativeArrayCountArray(CountArray, TreeCoverLinearDeforested):
+    b = np.sum(CountArray, axis = 2)
+    PercentArray = np.zeros(np.shape(CountArray))
+    CumulativeArray = np.zeros(np.shape(CountArray))
+    CumulativeArray[:,:,0] = np.transpose(TreeCoverLinearDeforested)
+    for x in range(20):
+        a = CountArray[:,:,x]  
+        PercentArray[:,:,x] = np.divide(a, b, out=np.zeros_like(a), where=b!=0) * 100 
+        if x == 0: continue
+        PercentTotal = CumulativeArray[:,:,x-1] + PercentArray[:,:,x]
+        PercentTotal[PercentTotal > 100] = 100
+        CumulativeArray[:,:,x] = PercentTotal
+    CumulativeArray = np.transpose(CumulativeArray)
+    return CumulativeArray, PercentArray
+
+CumulativeArray = CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'), np.load(filepathHansen + 'Processed/TreeCoverLinearDeforested_' + str(StandardNomenclature) + '.npy'))[0]
+PercentArray = np.transpose(CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'), np.load(filepathHansen + 'Processed/TreeCoverLinearDeforested_' + str(StandardNomenclature) + '.npy'))[1])
+#%%
+
+ForestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
+ForestPixMask[CumulativeArray[dateInQ-2000,:,:] <= 20] = 1
+
 for k in range(len(EVI_day)):
     dt = np.append(dt,datetime(EVI_yr[k],EVI_month[k],EVI_day[k]))
   
@@ -52,13 +74,24 @@ for m in range(tcpSize):
     lon = int(CoordLon[m])
     Changepoints = tcp_array[:,m]
     Changepoints = Changepoints[Changepoints != 0]
-    EVIpoint = EVI[:,lat,lon]
+    EVIpoint = EVI[:,lat,lon].values
     
     PL = int((10/0.25)/2)
     # extracting EVI for surrounding 10km and extracting forest mask for this area 
-    EVI10km = EVI[:, lat-PL:lat+PL, lon-PL:lon+PL]
+    EVI10km = EVI[:, lat-PL:lat+PL, lon-PL:lon+PL].values
     Forest10kmMask = ForestPixMask[lat-PL:lat+PL, lon-PL:lon+PL]
-    plt.plot(dt[162:368], EVIpoint[162:368])
+    EVI_time_avg = []
+
+    for i in range(len(EVI10km[:,0,0])):
+        EVI_time = EVI10km[i,:,:]
+        EVI_time_avg = np.append(EVI_time_avg,np.nanmean(EVI_time[Forest10kmMask == 1]))
+        
+    dt_s, EVIpoint_s, EVI_time_avg_s = dt[162:368], EVIpoint[162:368], EVI_time_avg[162:368]
+    def_minus_forest = EVIpoint_s - EVI_time_avg_s
+    fig, axs = plt.subplots(2)
+    
+    axs[0].plot(dt_s, EVIpoint_s)
+    axs[1].plot(dt_s, def_minus_forest)
     
     for j in range(len(Changepoints)):
         timestr = str(EVI.time[int(Changepoints[j])].values)
@@ -71,12 +104,15 @@ for m in range(tcpSize):
         
         if int(timestr[0:4]) == 2014:
             yrAhead = time + relativedelta(years=1)   
-            plt.vlines([timeC], 0, 1)
-
-    plt.vlines([timeC], 0, 1)
+            axs[0].vlines([timeC], 0, 1)
+        
+    axs[0].vlines([timeC], 0, 1)
+    axs[1].vlines([timeC], -0.5, 0.5)
+    axs[1].hlines([0], dt_s[0], dt_s[-1], colors='grey',linestyles='dashed')
     start_2014 = datetime(2014, 1, 1)
     end_2014 = datetime(2014, 12, 31)
-    plt.vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
+    axs[0].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
+    axs[1].vlines([start_2014, end_2014], -0.5, 0.5, colors='grey',linestyles='dashed')
     plt.savefig(filepathEVIFig + 'Deforested pixel and BEAST detected changepoints for ' + str(lat) + ' ' + str(lon) + str(dateInQ), dpi=300)
     plt.close()
     
