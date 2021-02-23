@@ -28,7 +28,7 @@ filepathHansen = '/home/coralie/Documents/Project_work/Remote_sensing/Data/Hanse
 latmin, latmax, lonmin, lonmax = 2.0, 3.6, 20.8, 23.4
 StandardNomenclature = str(lonmin) + '-' + str(lonmax) + '_lat' + str(latmin) + '-' + str(latmax)
 
-EVI =  xr.open_dataset(filepathEVI + '/Processed/' +'Proc EVI Land Mask Applied Aqua lon20.8-23.4 lat2.0-3.6.nc')
+EVI =  xr.open_dataset(filepathEVI + '/Processed/' +'Proc EVI Land Mask Applied Aqua lon' + StandardNomenclature +'.nc')
 EVI = EVI.to_array()
 EVI = EVI[0,:,:,:]
 
@@ -54,15 +54,16 @@ TreeCover2000 = TreeCover2000[0]
 
 TreeCoverLinear = ReturnForestAndDeforestRegrid(TreeCover2000, np.load(filepathEVI + '/Processed/' +'Proc EVI Land Mask Aqua lon' + StandardNomenclature + '.npy')   )
 TreeCoverLinearForested, TreeCoverLinearDeforested = TreeCoverLinear[0], TreeCoverLinear[1]
+np.save(filepathHansen + 'Processed/TreeCoverLinearDeforested_' + str(StandardNomenclature), TreeCoverLinearDeforested)
 TreeCover2000 = []
 
 #%%
 
-def CreateCumulativeArrayCountArray(CountArray):
+def CreateCumulativeArrayCountArray(CountArray, TreeCoverLinearDeforested):
     b = np.sum(CountArray, axis = 2)
     PercentArray = np.zeros(np.shape(CountArray))
     CumulativeArray = np.zeros(np.shape(CountArray))
-    CumulativeArray[:,:,0] = np.transpose(TreeCoverLinearDeforested.values)
+    CumulativeArray[:,:,0] = np.transpose(TreeCoverLinearDeforested)
     for x in range(20):
         a = CountArray[:,:,x]  
         PercentArray[:,:,x] = np.divide(a, b, out=np.zeros_like(a), where=b!=0) * 100 
@@ -72,8 +73,8 @@ def CreateCumulativeArrayCountArray(CountArray):
         CumulativeArray[:,:,x] = PercentTotal
     CumulativeArray = np.transpose(CumulativeArray)
     return CumulativeArray, PercentArray
-CumulativeArray = CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'))[0]
-PercentArray = np.transpose(CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'))[1])
+CumulativeArray = CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'), np.load(filepathHansen + 'Processed/TreeCoverLinearDeforested_' + str(StandardNomenclature) + '.npy'))[0]
+PercentArray = np.transpose(CreateCumulativeArrayCountArray(np.load(filepathHansen + '/Processed/' + 'Proc ForestLossPercentArray lon' + StandardNomenclature + '.npy'), np.load(filepathHansen + 'Processed/TreeCoverLinearDeforested_' + str(StandardNomenclature) + '.npy'))[1])
 
 #%%
 # this section of the program is running through the years and outputting the cell references of cells deforested that 
@@ -171,6 +172,9 @@ for year in range(dateInQ,dateInQ+ArSi):
     
     np.savetxt(filepathEVI + 'Processed/BEAST/' + 'CoordLat_' + str(year) + '_lon' + StandardNomenclature, CoordX)
     np.savetxt(filepathEVI + 'Processed/BEAST/' + 'CoordLon_' + str(year) + '_lon' + StandardNomenclature, CoordY)
+    
+    np.savetxt(filepathEVI + 'Processed/BEAST/' + 'IndexLat_' + str(year) + '_lon' + StandardNomenclature, deforestLocat[0])
+    np.savetxt(filepathEVI + 'Processed/BEAST/' + 'IndexLon_' + str(year) + '_lon' + StandardNomenclature, deforestLocat[1])
     print(str(year) +' '+ str(np.shape(CoordX)) + ' ' + str(np.shape(CoordY)))
     #saving the forest mask (showing where the deforestation is)
     ForestMaskAll[countHere,:,:] = ForestMask
@@ -192,7 +196,7 @@ loopCount = 0
 TimeInYr = 23
 countF = 0
 
-for dateInQ in range(2014,2017):
+for dateInQ in range(2014,2015):
     print(dateInQ)
     T = 2019 - dateInQ + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
@@ -209,7 +213,7 @@ for dateInQ in range(2014,2017):
         newList = newList.astype(np.float)
         tcpArray[range(0,len(newList)),k] = newList
     tcpSize = np.shape(tcpArray)[1]
-
+    np.save(filepathEVI + 'Processed/BEAST/tcpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
     count = 0
     monthArr = []
     ForestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
@@ -219,6 +223,7 @@ for dateInQ in range(2014,2017):
     DeforestPixMask[CumulativeArray[dateInQ-2000,:,:] <= 20] = 1
     AllEVIMonth = np.zeros([T,5])
     AllForestMonth  = np.zeros([T,5])
+    coord_store = np.zeros([2,2])
     
     # i now need to ensure that my program only looks at the breakpoint of the deforestation year and only looks at the 
     # first breakpoint
@@ -309,35 +314,19 @@ for dateInQ in range(2014,2017):
                             for timeF in range(len(ForestMonthAvg.year)):
                                 ForestMonthAvg[timeF,:,:].values[Forest10kmMask == 0] = np.nan 
                                 ForestMonth2[timeF] = np.nanmean(ForestMonthAvg[timeF,:,:].values)
-
-
+                            # storing the coordinates of the points
+                            coords_point = np.array([latC, lonC])
+                            coords_point = np.expand_dims(coords_point, axis=1)
+                            coord_store = np.append(coord_store, coords_point, axis=1)
                             EVISeasonalRemoved = EVIMonthAvg.data - ForestMonth2.data
                             ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                             AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             countF += 1
-
-                     #       plt.plot(EVIMonthAvg.year, EVISeasonalRemoved.data, color = 'grey')
-                #   EVIDay = EVIMonth.where(EVIMonth["time.day"] == l_date.day, drop=True)
-                    #    plt.plot(EVIMonthAvg.year, EVIMonthAvg.data, color = 'grey')
-                      #  plt.plot(EVIMonthAvg.year, ForestEVIAvg, color = 'green')
-    #
-        #        axs.vlines(dateInQ,np.nanmin(EVIMonthAvg), np.nanmax(EVIMonthAvg))
-                
-    #plt.savefig(filepath + 'test2' + str(m) + '.png', dpi=300)
-    # print("Hey")
-      #  plt.show()
-        #plt.vlines(dateInQ,np.nanmin(EVIMonthAvg), np.nanmax(EVIMonthAvg))
-        axes = plt.gca()
-    #    y_min, y_max = axes.get_ylim()
-        
-  #      plt.vlines(dateInQ,y_min, y_max)
-  #      plt.title('month = ' + str(month))
-   #     plt.savefig(filepath + 'Seasonal test ' + str(dateInQ) + ' ' + str(month) + '.png', dpi=300)
-   #     plt.close()
+                            plt.plot(EVISeasonalRemoved)
+                            plt.title(str(latC) + ', ' + str(lonC))
+                            plt.savefig(filepathEVIFig + str(latC) +', ' + str(lonC) + ' deforestation EVI minus seasonal.png', dpi= 300)
+                            plt.close()
    
-   
-   # so i need to get the program to run for each year in each loop. problem? that y2016 array's reference needs to have 
-   # a dynamic reference in there. need to figure out what it should be
    
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
    # into the AllForestMonth and then i can append all and plot all :D 
