@@ -43,6 +43,11 @@ for (yrInQ in 2014:2014){
   
     tcpArray[,row] = y$tcp
     scpArray[,row] = y$scp
+    
+    tArray[,row] = y$t
+    sArray[,row] = y$s
+    
+    tcpArray[,row] = y$tcp
     # axis(side = 1,at = c(2002:2020))
   }
   
