@@ -23,6 +23,14 @@ for (yrInQ in 2014:2014){
   SizeCoord = dim(CoordLon)[1]
   tcpArray <- array(0,dim=c(31,SizeCoord))
   scpArray <- array(0,dim=c(31,SizeCoord))
+  tArray <- array(0,dim=c(392,SizeCoord))
+  sArray <- array(0,dim=c(392,SizeCoord))
+  tNProbArray <- array(0,dim=c(32,SizeCoord))
+  sNProbArray <- array(0,dim=c(32,SizeCoord))
+  sProbArray <- array(0,dim=c(date_length,SizeCoord))
+  tProbArray <- array(0,dim=c(date_length,SizeCoord))
+
+  
   rowCount = 0
   for (row in 1:nrow(CoordLat)){
   
@@ -37,8 +45,8 @@ for (yrInQ in 2014:2014){
       spread(ID, value) %>%   # Can be skipped if you want a "long" table
       mutate(date = ymd(str_sub(names(b),2))) %>% 
       as_tibble()
-    
-  
+
+ 
     y = beast(points_data$'1', 23)
   
     tcpArray[,row] = y$tcp
@@ -47,9 +55,21 @@ for (yrInQ in 2014:2014){
     tArray[,row] = y$t
     sArray[,row] = y$s
     
+    tNProbArray[,row] = y$tNProb
+    sNProbArray[,row] = y$sNProb
+    sProbArray[,row] = y$sProb
+    tProbArray[,row] = y$tProb
+    
     tcpArray[,row] = y$tcp
     # axis(side = 1,at = c(2002:2020))
   }
   
   write.table(tcpArray, paste(filepath, 'BEAST/tcpArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(scpArray, paste(filepath, 'BEAST/scpArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tArray, paste(filepath, 'BEAST/tArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sArray, paste(filepath, 'BEAST/sArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tNProbArray, paste(filepath, 'BEAST/tNProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sNProbArray, paste(filepath, 'BEAST/sNProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sProbArray, paste(filepath, 'BEAST/sProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tProbArray, paste(filepath, 'BEAST/tProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
 }
