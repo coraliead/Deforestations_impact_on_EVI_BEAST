@@ -100,7 +100,7 @@ EVISeas = EVI
 
 EVIAllAppend = np.zeros((6,4,4))
 DefAllAppend = np.zeros((6,4,4))
-ArSi = 3
+ArSi = 1
 ForestMaskAll = np.zeros([ArSi, np.shape(EVI)[1], np.shape(EVI)[2]])
 for year in range(dateInQ,dateInQ+ArSi):   
     print(year)
@@ -200,20 +200,33 @@ for dateInQ in range(2014,2015):
     print(dateInQ)
     T = 2019 - dateInQ + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
-    fname = filepathEVI + 'Processed/BEAST/tcpArray_' + str(dateInQ) + '_lon' + StandardNomenclature
-    list_ = open(fname).read().split()
-    list_np = np.array(list_)
+    f_tcp_name = filepathEVI + 'Processed/BEAST/tcpArray_' + str(dateInQ) + '_lon' + StandardNomenclature
+    list_tcp = open(f_tcp_name).read().split()
+    list_np_tcp = np.array(list_tcp)
+    
+    s_tcp_name = filepathEVI + 'Processed/BEAST/scpArray_' + str(dateInQ) + '_lon' + StandardNomenclature
+    list_scp = open(s_tcp_name).read().split()
+    list_np_scp = np.array(list_scp)
+    
     n = np.shape(deforestLocation)[1]
     tcpArray = np.zeros([31,n])
+    scpArray = np.zeros([31,n])
     # assembling breakpoint file into array, has a size of [31, x] and x = the number of pixels (each can have multiple
     # breakpoints so they fill up the 31 rows)
     for k in range(n):
-        newList = list_np[k:1860:n]
-        newList = newList[newList != 'NA']
-        newList = newList.astype(np.float)
-        tcpArray[range(0,len(newList)),k] = newList
+        newList_tcp = list_np_tcp[k:1860:n]
+        newList_tcp = newList_tcp[newList_tcp != 'NA']
+        newList_tcp = newList_tcp.astype(np.float)
+        tcpArray[range(0,len(newList_tcp)),k] = newList_tcp
+        
+        newList_scp = list_np_scp[k:1860:n]
+        newList_scp = newList_scp[newList_scp != 'NA']
+        newList_scp = newList_scp.astype(np.float)
+        scpArray[range(0,len(newList_scp)),k] = newList_scp
+        
     tcpSize = np.shape(tcpArray)[1]
     np.save(filepathEVI + 'Processed/BEAST/tcpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
+    np.save(filepathEVI + 'Processed/BEAST/scpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, scpArray)
     count = 0
     monthArr = []
     ForestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
