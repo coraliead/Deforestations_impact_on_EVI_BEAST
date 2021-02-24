@@ -25,7 +25,16 @@ filepathHansen = '/home/coralie/Documents/Project_work/Remote_sensing/Data/Hanse
 dateInQ = 2014
 #tcp_array is the 
 tcp_array = np.load(filepathEVI + 'Processed/BEAST/tcpArray_' + str(dateInQ) + '_lon' + StandardNomenclature + '.npy')
+scp_array = np.loadtxt(filepathEVI + 'Processed/BEAST/scpArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'str')
+t_array = np.loadtxt(filepathEVI + 'Processed/BEAST/tArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
+s_array = np.loadtxt(filepathEVI + 'Processed/BEAST/sArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
+tNProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/tNProbArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
+sNProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/sNProbArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
+tProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/tProbArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
+sProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/sProbArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
 
+
+# tProb_array, sProb_array, sNProb_array, tNProb_array, s_array, t_array, tcp_array
 CoordLat = np.loadtxt(filepathEVI + 'Processed/BEAST/IndexLat_' + str(dateInQ) + '_lon' + StandardNomenclature)
 CoordLon = np.loadtxt(filepathEVI + 'Processed/BEAST/IndexLon_' + str(dateInQ) + '_lon' + StandardNomenclature)
 
