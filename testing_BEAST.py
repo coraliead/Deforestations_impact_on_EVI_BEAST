@@ -106,19 +106,28 @@ for m in range(tcpSize):
         
     dt_s, EVIpoint_s, EVI_time_avg_s = dt[162:368], EVIpoint[162:368], EVI_time_avg[162:368]
     def_minus_forest = EVIpoint_s - EVI_time_avg_s
-
+    rolling_cycle, EVI_avg, dt_avg = 4, [], []
+    
+    for roll in range(0, np.shape(EVIpoint_s)[0], rolling_cycle):
+        if roll > np.shape(EVIpoint_s)[0] - (rolling_cycle +1/ 2):
+            break
+        EVI_store = EVIpoint_s[roll:roll + rolling_cycle]
+        EVI_avg = np.append(EVI_avg, np.nanmean(EVI_store))
+        dt_avg = np.append(dt_avg, dt_s[int(np.round(roll + rolling_cycle / 2, decimals = 0))])
+        
     fig, axs = plt.subplots(5)
     fig.subplots_adjust(hspace = 0.6)
-    axs[0].plot(dt_s, def_minus_forest)
-    axs[1].plot(dt_s, EVIpoint_s)
-   
+    axs[0].plot(dt_s, EVIpoint_s)
+    axs[1].plot(dt_avg, EVI_avg)
+    
+    
     axs[2].plot(dt_s, tProb[162:368])
     #axs[4].plot(dt_s, sProb[162:368])
     axs[3].plot(dt_s, t_[162:368])
     axs[4].plot(dt_s, s_[162:368])
-    
-    axs[0].set_title('Deforested - forested EVI')
-    axs[1].set_title('EVI')
+  
+    axs[0].set_title('EVI')
+    axs[1].set_title('Rolling mean EVI (average of 2 months')
     axs[2].set_title('tProb - curve of probability-of-being-trend-changepoint over the time for the i-th time series')
     axs[3].set_title('t - best fitted trend component')
     axs[4].set_title('s - best fitted seasonal component.')
@@ -152,15 +161,16 @@ for m in range(tcpSize):
     end_2014 = datetime(2014, 12, 31)
     if len(timeC_s) > 0:
         print (str(lat) + ' ' + str(lon))
-        
+    
+    axs[0].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed', label='2014')
+    axs[0].vlines([timeC], 0, 1, label='trend changepoint')
+    axs[0].vlines([timeC_s], 0, 1, colors='g', label='seasonal changepoint')
+    axs[0].legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
     axs[1].vlines([timeC_s], 0, 1, colors='g')
     axs[1].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
     axs[1].vlines([timeC], 0, 1)
     
-    axs[0].vlines([timeC_s], -0.5, 0.5, colors='g')
-    axs[0].vlines([start_2014, end_2014], -0.5, 0.5, colors='grey',linestyles='dashed')
-    axs[0].vlines([timeC], -0.5, 0.5)
-    axs[0].hlines([0], dt_s[0], dt_s[-1], colors='grey',linestyles='dashed')
     
     axs[2].vlines([timeC_s], np.min(tProb), np.max(tProb), colors='g')
     axs[2].vlines([start_2014, end_2014], np.min(tProb), np.max(tProb), colors='grey',linestyles='dashed')
@@ -170,8 +180,8 @@ for m in range(tcpSize):
     axs[3].vlines([start_2014, end_2014],  np.min(t_), np.max(t_), colors='grey',linestyles='dashed')
     axs[3].vlines([timeC], np.min(t_), np.max(t_))
     
-    
-    plt.savefig(filepathEVIFig + 'Deforested pixel and deforested - forested pixel and BEAST detected changepoints for ' + str(lat) + ' ' + str(lon) + ' ' + str(dateInQ), dpi=300)
+   
+    plt.savefig(filepathEVIFig + 'Deforested pixel and rolling mean and BEAST detected changepoints for ' + str(lat) + ' ' + str(lon) + ' ' + str(dateInQ), dpi=300, bbox_inches='tight')
     plt.close()
     
     print(str(int(m/tcpSize * 100)) + '% complete')
