@@ -34,7 +34,6 @@ tProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/tProbArray_' + str(dateI
 sProb_array = np.loadtxt(filepathEVI + 'Processed/BEAST/sProbArray_' + str(dateInQ) + '_lon' + StandardNomenclature, dtype = 'float')
 
 
-# tProb_array, sProb_array, sNProb_array, tNProb_array, s_array, t_array, tcp_array
 CoordLat = np.loadtxt(filepathEVI + 'Processed/BEAST/IndexLat_' + str(dateInQ) + '_lon' + StandardNomenclature)
 CoordLon = np.loadtxt(filepathEVI + 'Processed/BEAST/IndexLon_' + str(dateInQ) + '_lon' + StandardNomenclature)
 
@@ -78,11 +77,21 @@ for k in range(len(EVI_day)):
 # extract EVI of nearby pixels (within 20km radius) 
 # use mask to remove all deforested pixels and then average the forested pixels. plot
 for m in range(tcpSize):
-    timeC = []
+    timeC, timeC_s = [], []
     lat = int(CoordLat[m])
     lon = int(CoordLon[m])
+    # tProb_array, sProb_array, sNProb_array, tNProb_array, s_array, t_array, tcp_array
+    tProb = tProb_array[:,m]
+    sProb = sProb_array[:,m]
+    sNProb = sNProb_array[:,m]
+    tNProb = tNProb_array[:,m]
+    s_ = s_array[:,m]
+    t_ = t_array[:,m]
+    
     Changepoints = tcp_array[:,m]
     Changepoints = Changepoints[Changepoints != 0]
+    Changepoints_scp = scp_array[:,m]
+    Changepoints_scp = Changepoints_scp[Changepoints_scp != 'NA']
     EVIpoint = EVI[:,lat,lon].values
     
     PL = int((10/0.25)/2)
@@ -97,11 +106,29 @@ for m in range(tcpSize):
         
     dt_s, EVIpoint_s, EVI_time_avg_s = dt[162:368], EVIpoint[162:368], EVI_time_avg[162:368]
     def_minus_forest = EVIpoint_s - EVI_time_avg_s
-    fig, axs = plt.subplots(2)
+
+    fig, axs = plt.subplots(5)
+    fig.subplots_adjust(hspace = 0.6)
+    axs[0].plot(dt_s, def_minus_forest)
+    axs[1].plot(dt_s, EVIpoint_s)
+   
+    axs[2].plot(dt_s, tProb[162:368])
+    #axs[4].plot(dt_s, sProb[162:368])
+    axs[3].plot(dt_s, t_[162:368])
+    axs[4].plot(dt_s, s_[162:368])
     
-    axs[0].plot(dt_s, EVIpoint_s)
-    axs[1].plot(dt_s, def_minus_forest)
-    
+    axs[0].set_title('Deforested - forested EVI')
+    axs[1].set_title('EVI')
+    axs[2].set_title('tProb - curve of probability-of-being-trend-changepoint over the time for the i-th time series')
+    axs[3].set_title('t - best fitted trend component')
+    axs[4].set_title('s - best fitted seasonal component.')
+  #  axs[2].set_title('tProb - curve of probability-of-being-trend-changepoint over the time for the i-th time series')
+   # axs[3].set_title('sProb - curve of probability-of-being-changepoint over the time for the i-th time series.')
+    #axs[4].set_title('s - best fitted seasonal component.')
+    #axs[5].set_title('t - best fitted trend component')
+    plt.rcParams.update({'font.size': 12})
+    fig.set_size_inches(13, 11)
+   
     for j in range(len(Changepoints)):
         timestr = str(EVI.time[int(Changepoints[j])].values)
         if int(timestr[0:4]) < 2010:
@@ -110,19 +137,41 @@ for m in range(tcpSize):
             break
         time = datetime(int(timestr[0:4]), int(timestr[5:7]), int(timestr[8:10]))
         timeC = np.append(timeC,time)
-        
-        if int(timestr[0:4]) == 2014:
-            yrAhead = time + relativedelta(years=1)   
-            axs[0].vlines([timeC], 0, 1)
-        
-    axs[0].vlines([timeC], 0, 1)
-    axs[1].vlines([timeC], -0.5, 0.5)
-    axs[1].hlines([0], dt_s[0], dt_s[-1], colors='grey',linestyles='dashed')
+
+    
+    for d in range(len(Changepoints_scp)):
+        timestr = str(EVI.time[int(Changepoints_scp[d])].values)
+        if int(timestr[0:4]) < 2010:
+            break
+        if int(timestr[0:4]) > 2018:
+            break
+        time_s = datetime(int(timestr[0:4]), int(timestr[5:7]), int(timestr[8:10]))
+        timeC_s = np.append(timeC_s,time_s)
+
     start_2014 = datetime(2014, 1, 1)
     end_2014 = datetime(2014, 12, 31)
-    axs[0].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
-    axs[1].vlines([start_2014, end_2014], -0.5, 0.5, colors='grey',linestyles='dashed')
-    plt.savefig(filepathEVIFig + 'Deforested pixel and BEAST detected changepoints for ' + str(lat) + ' ' + str(lon) + str(dateInQ), dpi=300)
+    if len(timeC_s) > 0:
+        print (str(lat) + ' ' + str(lon))
+        
+    axs[1].vlines([timeC_s], 0, 1, colors='g')
+    axs[1].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
+    axs[1].vlines([timeC], 0, 1)
+    
+    axs[0].vlines([timeC_s], -0.5, 0.5, colors='g')
+    axs[0].vlines([start_2014, end_2014], -0.5, 0.5, colors='grey',linestyles='dashed')
+    axs[0].vlines([timeC], -0.5, 0.5)
+    axs[0].hlines([0], dt_s[0], dt_s[-1], colors='grey',linestyles='dashed')
+    
+    axs[2].vlines([timeC_s], np.min(tProb), np.max(tProb), colors='g')
+    axs[2].vlines([start_2014, end_2014], np.min(tProb), np.max(tProb), colors='grey',linestyles='dashed')
+    axs[2].vlines([timeC], np.min(tProb), np.max(tProb))
+    
+    axs[3].vlines([timeC_s],np.min(t_), np.max(t_), colors='g')
+    axs[3].vlines([start_2014, end_2014],  np.min(t_), np.max(t_), colors='grey',linestyles='dashed')
+    axs[3].vlines([timeC], np.min(t_), np.max(t_))
+    
+    
+    plt.savefig(filepathEVIFig + 'Deforested pixel and deforested - forested pixel and BEAST detected changepoints for ' + str(lat) + ' ' + str(lon) + ' ' + str(dateInQ), dpi=300)
     plt.close()
     
     print(str(int(m/tcpSize * 100)) + '% complete')
