@@ -95,7 +95,6 @@ dateInQ = 2014
 fig = plt.figure()
 # loop through years in question
 
-
 EVISeas = EVI
 
 EVIAllAppend = np.zeros((6,4,4))
@@ -151,7 +150,6 @@ for year in range(dateInQ,dateInQ+ArSi):
     TotalForestPix = ForestMask[ForestMask > 0]
     print(str(year)+ ' ' + str(np.shape(TotalForestPix)[0]))
 
-  
     CoordX = []
     CoordY= []
     
@@ -164,8 +162,7 @@ for year in range(dateInQ,dateInQ+ArSi):
         CoordX.append(float(EVI[:,DefX, :].lat.data))
         CoordY.append(float(EVI[:, :, DefY].lon.data))    
         DefCount = DefCount + 1
-    
-        
+       
     CoordX = np.array(CoordX)   
     print(len(CoordX))
     CoordY = np.array(CoordY)    
@@ -179,13 +176,6 @@ for year in range(dateInQ,dateInQ+ArSi):
     #saving the forest mask (showing where the deforestation is)
     ForestMaskAll[countHere,:,:] = ForestMask
     countHere = countHere + 1 
-# next? compare to forested pixels
-
-
-# if run for only 2014, big patch is:
-    
-x1, x2, y1, y2 = 581, 598, 996, 1021
-DefPatch = ForestMask[x1:x2, y1:y2]
 
 #%%               
 # input from r, tells me where the breaks are from the BEAST algorithm :D      
