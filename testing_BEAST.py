@@ -167,9 +167,9 @@ for m in range(tcpSize):
     axs[0].vlines([timeC_s], 0, 1, colors='g', label='seasonal changepoint')
     axs[0].legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
-    axs[1].vlines([timeC_s], 0, 1, colors='g')
-    axs[1].vlines([start_2014, end_2014], 0, 1, colors='grey',linestyles='dashed')
-    axs[1].vlines([timeC], 0, 1)
+    axs[1].vlines([timeC_s], np.min(EVI_avg), np.max(EVI_avg), colors='g')
+    axs[1].vlines([start_2014, end_2014], np.min(EVI_avg), np.max(EVI_avg), colors='grey',linestyles='dashed')
+    axs[1].vlines([timeC], np.min(EVI_avg), np.max(EVI_avg))
     
     
     axs[2].vlines([timeC_s], np.min(tProb), np.max(tProb), colors='g')
