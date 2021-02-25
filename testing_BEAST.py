@@ -76,6 +76,7 @@ for k in range(len(EVI_day)):
 # next step is to do deforested - forested EVI and subplot it next to the below plot with changepoints and 2014 overlaid
 # extract EVI of nearby pixels (within 20km radius) 
 # use mask to remove all deforested pixels and then average the forested pixels. plot
+def_minus_forest_array = np.zeros([392,tcpSize])
 for m in range(tcpSize):
     timeC, timeC_s = [], []
     lat = int(CoordLat[m])
@@ -103,9 +104,10 @@ for m in range(tcpSize):
     for i in range(len(EVI10km[:,0,0])):
         EVI_time = EVI10km[i,:,:]
         EVI_time_avg = np.append(EVI_time_avg,np.nanmean(EVI_time[Forest10kmMask == 1]))
-        
+    
+    def_minus_forest_array[:,m] = EVIpoint - EVI_time_avg
     dt_s, EVIpoint_s, EVI_time_avg_s = dt[162:368], EVIpoint[162:368], EVI_time_avg[162:368]
-    def_minus_forest = EVIpoint_s - EVI_time_avg_s
+    def_minus_forest_s = EVIpoint_s - EVI_time_avg_s
     rolling_cycle, EVI_avg, dt_avg = 4, [], []
     
     for roll in range(0, np.shape(EVIpoint_s)[0], rolling_cycle):
