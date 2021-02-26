@@ -47,13 +47,10 @@ for (yrInQ in 2014:2014){
       spread(ID, value) %>%   # Can be skipped if you want a "long" table
       mutate(date = ymd(str_sub(names(b),2))) %>% 
       as_tibble()
-    
-    ref <- paste('V', row, sep = "")
-    ref1 <- sQuote(ref)
-    ref2 <- noquote(ref1)
-    defarray <- data.frame(points_data$'date', def_forest_EVI$ref2)
 
-    y = beast(points_data$'1', 23)
+    defarray <- data.frame(points_data$'date', def_forest_EVI[row])
+
+    y = beast(defarray[[2]], 23)
     
     tcpArray[,row] = y$tcp
     scpArray[,row] = y$scp
@@ -70,12 +67,12 @@ for (yrInQ in 2014:2014){
     # axis(side = 1,at = c(2002:2020))
   }
   
-  write.table(tcpArray, paste(filepath, 'BEAST/tcpArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(scpArray, paste(filepath, 'BEAST/scpArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(tArray, paste(filepath, 'BEAST/tArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(sArray, paste(filepath, 'BEAST/sArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(tNProbArray, paste(filepath, 'BEAST/tNProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(sNProbArray, paste(filepath, 'BEAST/sNProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(sProbArray, paste(filepath, 'BEAST/sProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
-  write.table(tProbArray, paste(filepath, 'BEAST/tProbArray_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tcpArray, paste(filepath, 'BEAST/tcpArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(scpArray, paste(filepath, 'BEAST/scpArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tArray, paste(filepath, 'BEAST/tArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sArray, paste(filepath, 'BEAST/sArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tNProbArray, paste(filepath, 'BEAST/tNProbArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sNProbArray, paste(filepath, 'BEAST/sNProbArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(sProbArray, paste(filepath, 'BEAST/sProbArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
+  write.table(tProbArray, paste(filepath, 'BEAST/tProbArray_def_minus_forest_', (yrInQ), StandardNomenclature, sep = ""), row.names = FALSE, col.names = FALSE)
 }
