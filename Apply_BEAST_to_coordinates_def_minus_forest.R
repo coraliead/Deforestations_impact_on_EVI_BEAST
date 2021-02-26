@@ -9,8 +9,7 @@ library(tidyverse)
 filepath <- '~/Documents/Project_work/Remote_sensing/Data/MODIS_EVI/Processed/'
 setwd("~/Documents/Project_work/Remote_sensing/Data/MODIS_EVI/Processed/")
 fname <- 'Proc_EVI_Land_Mask_Applied_Aqua_lon20.8-23.4_lat2.0-3.6.nc'
-fname2<- 'BEAST/deforested minus forested EVI for deforested pixels 2014_lon20.8-23.4_lat2.0-3.6'
-def_forest_EVI = read.table(paste(filepath, fname2, sep = ""), quote="\"", comment.char="")
+
 b <- brick(fname)
 latmin <-2.0
 latmin = formatC(latmin, digits = 1, format = "f")
@@ -18,9 +17,11 @@ latmax <-3.6
 lonmin <- 20.8
 lonmax <- 23.4
 StandardNomenclature <- paste('_lon',(lonmin),'-',(lonmax),'_lat',(latmin),'-',(latmax), sep = "")
-for (yrInQ in 2013:2013){
+for (yrInQ in 2008:2016){
   CoordLat <- read.table(paste(filepath, 'BEAST/CoordLat_', (yrInQ), StandardNomenclature, sep = ""), quote="\"", comment.char="")
   CoordLon <- read.table(paste(filepath, 'BEAST/CoordLon_', (yrInQ), StandardNomenclature, sep = ""), quote="\"", comment.char="")
+  fname2<- 'BEAST/deforested minus forested EVI for deforested pixels '
+  def_forest_EVI = read.table(paste(filepath, fname2, (yrInQ), StandardNomenclature, sep = ""), quote="\"", comment.char="")
   
   SizeCoord = dim(CoordLon)[1]
   tcpArray <- array(0,dim=c(31,SizeCoord))
