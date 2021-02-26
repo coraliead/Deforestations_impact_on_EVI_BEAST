@@ -185,16 +185,28 @@ loopCount = 0
 # above with same years to change them
 TimeInYr = 23
 countF = 0
+#%%
+txt = input("Do you want to process deforested EVI (type 0) or deforested minus forested EVI(type 1)? ")
+#%%
+tcp_ref, tcp_ref_d = 'tcpArray_'
+scp_ref, scp_ref_d = 'scpArray_'
+tcp_ref_proc, tcp_ref_proc_d = 'tcpArray_Proc_', 'tcpArray_Proc_d'
+scp_ref, scp_ref_d = 'scpArray_'
+tcp_ref, tcp_ref_d = 'tcpArray_'
+tcp_ref, tcp_ref_d = 'tcpArray_'
+tcp_ref, tcp_ref_d = 'tcpArray_'
+tcp_ref, tcp_ref_d = 'tcpArray_'
+tcp_ref, tcp_ref_d = 'tcpArray_'
 
 for dateInQ in range(2014,2015):
     print(dateInQ)
     T = 2019 - dateInQ + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
-    f_tcp_name = filepathEVI + 'Processed/BEAST/tcpArray_' + str(dateInQ) + '_lon' + StandardNomenclature
+    f_tcp_name = filepathEVI + 'Processed/BEAST/' + tcp_ref + str(dateInQ) + '_lon' + StandardNomenclature
     list_tcp = open(f_tcp_name).read().split()
     list_np_tcp = np.array(list_tcp)
     
-    s_tcp_name = filepathEVI + 'Processed/BEAST/scpArray_' + str(dateInQ) + '_lon' + StandardNomenclature
+    s_tcp_name = filepathEVI + 'Processed/BEAST/' + scp_ref + str(dateInQ) + '_lon' + StandardNomenclature
     list_scp = open(s_tcp_name).read().split()
     list_np_scp = np.array(list_scp)
     
@@ -215,7 +227,7 @@ for dateInQ in range(2014,2015):
         scpArray[range(0,len(newList_scp)),k] = newList_scp
         
     tcpSize = np.shape(tcpArray)[1]
-    np.save(filepathEVI + 'Processed/BEAST/tcpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
+    np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
     np.save(filepathEVI + 'Processed/BEAST/scpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, scpArray)
     count = 0
     monthArr = []
