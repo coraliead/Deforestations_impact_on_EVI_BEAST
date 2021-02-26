@@ -185,18 +185,18 @@ loopCount = 0
 # above with same years to change them
 TimeInYr = 23
 countF = 0
-#%%
+
 txt = input("Do you want to process deforested EVI (type 0) or deforested minus forested EVI(type 1)? ")
-#%%
-tcp_ref, tcp_ref_d = 'tcpArray_'
-scp_ref, scp_ref_d = 'scpArray_'
-tcp_ref_proc, tcp_ref_proc_d = 'tcpArray_Proc_', 'tcpArray_Proc_d'
-scp_ref, scp_ref_d = 'scpArray_'
-tcp_ref, tcp_ref_d = 'tcpArray_'
-tcp_ref, tcp_ref_d = 'tcpArray_'
-tcp_ref, tcp_ref_d = 'tcpArray_'
-tcp_ref, tcp_ref_d = 'tcpArray_'
-tcp_ref, tcp_ref_d = 'tcpArray_'
+if float(txt) == 0:
+    tcp_ref, scp_ref = 'tcpArray_', 'scpArray_'
+    tcp_ref_proc, scp_ref_proc = 'tcpArray_Proc_', 'scpArray_Proc_'
+    title_ref = ' BEAST applied to deforested EVI '
+    
+elif float(txt) == 1:
+    tcp_ref, scp_ref = 'tcpArray_def_minus_forest_', 'tcpArray_def_minus_forest_'
+    tcp_ref_proc, scp_ref_proc = 'tcpArray_Proc_def_minus_forest_', 'scpArray_Proc_def_minus_forest_'
+    title_ref = ' BEAST applied to deforested - forested EVI '
+
 
 for dateInQ in range(2014,2015):
     print(dateInQ)
@@ -228,7 +228,7 @@ for dateInQ in range(2014,2015):
         
     tcpSize = np.shape(tcpArray)[1]
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
-    np.save(filepathEVI + 'Processed/BEAST/scpArray_proc_' + str(dateInQ) + '_lon' + StandardNomenclature, scpArray)
+    np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(dateInQ) + '_lon' + StandardNomenclature, scpArray)
     count = 0
     monthArr = []
     ForestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
@@ -339,7 +339,7 @@ for dateInQ in range(2014,2015):
                             countF += 1
                             plt.plot(EVISeasonalRemoved)
                             plt.title(str(latC) + ', ' + str(lonC))
-                            plt.savefig(filepathEVIFig + str(latC) +', ' + str(lonC) + ' deforestation EVI minus seasonal.png', dpi= 300)
+                   #         plt.savefig(filepathEVIFig + str(latC) +', ' + str(lonC) + ' deforestation EVI minus seasonal.png', dpi= 300)
                             plt.close()
    
    
@@ -371,7 +371,7 @@ for dateInQ in range(2014,2015):
     plt.ylabel('Δ EVI')
     plt.hlines(0, dateInQ-1, dateInQ + T-2, colors = 'k', linestyles = 'dashed', zorder = 5)
     plt.xticks(ticks=x, labels=x ) 
-    plt.savefig(filepathEVIFig + str(dateInQ) + ' deforestation EVI minus seasonal.png', dpi= 300) 
+    plt.savefig(filepathEVIFig + str(dateInQ) + title_ref + 'deforestation EVI minus seasonal.png', dpi= 300) 
     loopCount = loopCount + 1
     plt.close()
     print(AvgdAll[1] - AvgdAll[0])
