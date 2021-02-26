@@ -91,7 +91,7 @@ patchLeeway = (patchLat * patchLon) - ((patchLat * patchLon) * patchThres)
 
 DeforestThreshold = 30
 MaxThreshold = 5
-dateInQ = 2014
+dateInQ = 2008
 fig = plt.figure()
 # loop through years in question
 
@@ -99,7 +99,7 @@ EVISeas = EVI
 
 EVIAllAppend = np.zeros((6,4,4))
 DefAllAppend = np.zeros((6,4,4))
-ArSi = 1
+ArSi = 6
 ForestMaskAll = np.zeros([ArSi, np.shape(EVI)[1], np.shape(EVI)[2]])
 for year in range(dateInQ,dateInQ+ArSi):   
     print(year)
@@ -198,15 +198,15 @@ elif float(txt) == 1:
     title_ref = ' BEAST applied to deforested - forested EVI '
 
 
-for dateInQ in range(2014,2015):
-    print(dateInQ)
-    T = 2019 - dateInQ + 2
+for yr in range(dateInQ,dateInQ+ArSi):
+    print(yr)
+    T = 2019 - yr + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
-    f_tcp_name = filepathEVI + 'Processed/BEAST/' + tcp_ref + str(dateInQ) + '_lon' + StandardNomenclature
+    f_tcp_name = filepathEVI + 'Processed/BEAST/' + tcp_ref + str(yr) + '_lon' + StandardNomenclature
     list_tcp = open(f_tcp_name).read().split()
     list_np_tcp = np.array(list_tcp)
     
-    s_tcp_name = filepathEVI + 'Processed/BEAST/' + scp_ref + str(dateInQ) + '_lon' + StandardNomenclature
+    s_tcp_name = filepathEVI + 'Processed/BEAST/' + scp_ref + str(yr) + '_lon' + StandardNomenclature
     list_scp = open(s_tcp_name).read().split()
     list_np_scp = np.array(list_scp)
     
@@ -227,15 +227,15 @@ for dateInQ in range(2014,2015):
         scpArray[range(0,len(newList_scp)),k] = newList_scp
         
     tcpSize = np.shape(tcpArray)[1]
-    np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(dateInQ) + '_lon' + StandardNomenclature, tcpArray)  
-    np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(dateInQ) + '_lon' + StandardNomenclature, scpArray)
+    np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
+    np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(yr) + '_lon' + StandardNomenclature, scpArray)
     count = 0
     monthArr = []
-    ForestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
-    ForestPixMask[CumulativeArray[dateInQ-2000,:,:] <= 20] = 1
+    ForestPixMask = np.zeros_like(CumulativeArray[yr-2000,:,:])
+    ForestPixMask[CumulativeArray[yr-2000,:,:] <= 20] = 1
     
-    DeforestPixMask = np.zeros_like(CumulativeArray[dateInQ-2000,:,:])
-    DeforestPixMask[CumulativeArray[dateInQ-2000,:,:] <= 20] = 1
+    DeforestPixMask = np.zeros_like(CumulativeArray[yr-2000,:,:])
+    DeforestPixMask[CumulativeArray[yr-2000,:,:] <= 20] = 1
     AllEVIMonth = np.zeros([T,5])
     AllForestMonth  = np.zeros([T,5])
     coord_store = np.zeros([2,2])
@@ -283,8 +283,8 @@ for dateInQ in range(2014,2015):
                     # if its too small then Bre is set to 1
                     if (l_date - l_date1).days < timeBetweenBreaks:
                         Bre = 1
-                l_date_Begin = datetime(dateInQ,1,1)
-                l_date_End = datetime(dateInQ+1,1,1)
+                l_date_Begin = datetime(yr,1,1)
+                l_date_End = datetime(yr+1,1,1)
                 delta_Begin = (l_date_Begin - f_date).days
                 delta_End = (l_date_End - f_date).days
 
@@ -299,11 +299,11 @@ for dateInQ in range(2014,2015):
                         if Bre == 0:
                             BP = 1
                             EVIMonth = EVIPoint.where(EVIPoint["time.month"] == month, drop=True)
-                            EVIMonth = EVIMonth.where(EVIMonth["time.year"] >= dateInQ-1, drop=True)
-                            EVIDeforestYr = EVIMonth.where(EVIMonth["time.year"] == dateInQ, drop=True)
+                            EVIMonth = EVIMonth.where(EVIMonth["time.year"] >= yr-1, drop=True)
+                            EVIDeforestYr = EVIMonth.where(EVIMonth["time.year"] == yr, drop=True)
                             
                             ForestMonth = EVI10km.where(EVI10km["time.month"] == month, drop=True)
-                            ForestMonth = ForestMonth.where(ForestMonth["time.year"] >= dateInQ-1, drop=True)
+                            ForestMonth = ForestMonth.where(ForestMonth["time.year"] >= yr-1, drop=True)
                             
                             # this is checking if there are more than 1 date in the breakmonth and removing the date that came
                             # before the breakpoint so that its not counted 
@@ -314,7 +314,7 @@ for dateInQ in range(2014,2015):
                                 day1, day2 = int(date1["time.day"].data), int(date2["time.day"].data)
                                 
                                 if l_date.day > day1:
-                                    dateDelete = cftime.DatetimeJulian(dateInQ, month, day1)
+                                    dateDelete = cftime.DatetimeJulian(yr, month, day1)
             
                                     EVIMonth = EVIMonth.where(EVIMonth["time"] != dateDelete, drop=True)
                                     ForestMonth = ForestMonth.where(ForestMonth["time"] != dateDelete, drop=True)
@@ -346,7 +346,7 @@ for dateInQ in range(2014,2015):
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
    # into the AllForestMonth and then i can append all and plot all :D 
     y2016 = AllForestMonth[:,5:np.shape(AllForestMonth)[1]]
-    x = np.arange(dateInQ-1, dateInQ + T - 1)
+    x = np.arange(yr-1, yr + T - 1)
 
     for j in range(np.shape(y2016)[1]):
         yRow = y2016[:,j]
@@ -369,12 +369,12 @@ for dateInQ in range(2014,2015):
     plt.errorbar(x, AvgdAll, yerr = SEAll, color = 'g',  linewidth = 2.5, 
                  zorder = 4, ecolor='orangered', elinewidth=lw, capsize=cs, capthick = ct, barsabove = True)
     plt.ylabel('Δ EVI')
-    plt.hlines(0, dateInQ-1, dateInQ + T-2, colors = 'k', linestyles = 'dashed', zorder = 5)
+    plt.hlines(0, yr-1, yr + T-2, colors = 'k', linestyles = 'dashed', zorder = 5)
     plt.xticks(ticks=x, labels=x ) 
-    plt.savefig(filepathEVIFig + str(dateInQ) + title_ref + 'deforestation EVI minus seasonal.png', dpi= 300) 
+    plt.savefig(filepathEVIFig + str(yr) + title_ref + 'deforestation EVI minus seasonal.png', dpi= 300) 
     loopCount = loopCount + 1
     plt.close()
-    print(AvgdAll[1] - AvgdAll[0])
+
 
     # next issues is i need to figure out how to aggregate and present the data. how to collate it..... ARGH
     

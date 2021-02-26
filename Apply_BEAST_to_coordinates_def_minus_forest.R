@@ -18,7 +18,7 @@ latmax <-3.6
 lonmin <- 20.8
 lonmax <- 23.4
 StandardNomenclature <- paste('_lon',(lonmin),'-',(lonmax),'_lat',(latmin),'-',(latmax), sep = "")
-for (yrInQ in 2014:2014){
+for (yrInQ in 2013:2013){
   CoordLat <- read.table(paste(filepath, 'BEAST/CoordLat_', (yrInQ), StandardNomenclature, sep = ""), quote="\"", comment.char="")
   CoordLon <- read.table(paste(filepath, 'BEAST/CoordLon_', (yrInQ), StandardNomenclature, sep = ""), quote="\"", comment.char="")
   
@@ -38,7 +38,7 @@ for (yrInQ in 2014:2014){
     
     lat <- CoordLat[row,]  # Array of x coordinates
     lon <- CoordLon[row,]  # Array of y coordinates
-    
+     
     points <- SpatialPoints(cbind(lon,lat)) # Build a spPoints object
     # Extract and tidy
     points_data <- b %>% 

@@ -187,5 +187,6 @@ for m in range(tcpSize):
     plt.close()
     
     print(str(int(m/tcpSize * 100)) + '% complete')
-    
+
+np.savetxt(filepathEVI + 'Processed/BEAST/' + 'deforested minus forested EVI for deforested pixels ' + str(dateInQ) + '_lon' + StandardNomenclature, def_minus_forest_array)
     
