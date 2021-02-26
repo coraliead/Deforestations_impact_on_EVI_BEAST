@@ -197,8 +197,13 @@ elif float(txt) == 1:
     tcp_ref_proc, scp_ref_proc = 'tcpArray_Proc_def_minus_forest_', 'scpArray_Proc_def_minus_forest_'
     title_ref = ' BEAST applied to deforested - forested EVI '
 
-
+yrs_to_show = 5
+fig, axs = plt.subplots(nrows=1, ncols=3)
+# fig.subplots_adjust(vspace = 0.6)
+fig.set_size_inches(8, 2)
+count = 0
 for yr in range(dateInQ,dateInQ+ArSi):
+    
     print(yr)
     T = 2019 - yr + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
@@ -229,7 +234,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     tcpSize = np.shape(tcpArray)[1]
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
     np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(yr) + '_lon' + StandardNomenclature, scpArray)
-    count = 0
+
     monthArr = []
     ForestPixMask = np.zeros_like(CumulativeArray[yr-2000,:,:])
     ForestPixMask[CumulativeArray[yr-2000,:,:] <= 20] = 1
@@ -275,7 +280,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
                 delta = (l_date - f_date).days
                 l_date1 = []
                 timeBetweenBreaks = 4 * TimeInYr
-              #  plt.vlines(delta,0,1)
+
                 if f > 0:
                     dateStr1 = str(EVIPoint[int(breakPoints[f-1])].time.data)
                     l_date1 = datetime.strptime(dateStr1, '%Y-%m-%d %H:%M:%S')
@@ -287,9 +292,6 @@ for yr in range(dateInQ,dateInQ+ArSi):
                 l_date_End = datetime(yr+1,1,1)
                 delta_Begin = (l_date_Begin - f_date).days
                 delta_End = (l_date_End - f_date).days
-
-                # plt.vlines(delta_18Begin,0,1, colors = 'grey',linestyles='dashed')
-                # plt.vlines(delta_18End,0,1, colors = 'grey',linestyles='dashed')
                 # what do i want to plot? i want to show the EVI evolution after deforestation. So, i need to show this over multiple 
                 # deforestation events but needs to be the same month on the graph as otherwise its just going to show seasonal trends
               #  print("h")
@@ -336,23 +338,19 @@ for yr in range(dateInQ,dateInQ+ArSi):
                             EVISeasonalRemoved = EVIMonthAvg.data - ForestMonth2.data
                             ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                             AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
-                            countF += 1
-                            plt.plot(EVISeasonalRemoved)
-                            plt.title(str(latC) + ', ' + str(lonC))
-                   #         plt.savefig(filepathEVIFig + str(latC) +', ' + str(lonC) + ' deforestation EVI minus seasonal.png', dpi= 300)
-                            plt.close()
-   
+                            countF += 1 
    
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
    # into the AllForestMonth and then i can append all and plot all :D 
     y2016 = AllForestMonth[:,5:np.shape(AllForestMonth)[1]]
     x = np.arange(yr-1, yr + T - 1)
+    x = x[0:yrs_to_show]
 
     for j in range(np.shape(y2016)[1]):
         yRow = y2016[:,j]
-        plt.plot(x, yRow, 'grey', alpha = 0.5, zorder = 1)
+        yRow = yRow[0:yrs_to_show]
+        axs[count].plot(x, yRow, 'grey', alpha = 0.5, zorder = 1)
    
-
     AvgdAll = np.zeros([np.shape(y2016)[0]])
     SEAll = np.zeros([np.shape(y2016)[0]])
     for h in range(np.shape(y2016)[0]):
@@ -360,21 +358,30 @@ for yr in range(dateInQ,dateInQ+ArSi):
         StDev = np.nanstd(y2016[h,:])
         SamSi = np.size(y2016[h,:])
         SEAll[h] = StDev / np.sqrt(SamSi)
+    AvgdAll = AvgdAll[0:yrs_to_show]
+    SEAll = SEAll[0:yrs_to_show]
     lw = 2
     cs = 2
     ct = 2
     #plt.plot(x, AvgdAll, 'g', linewidth = 2.5, zorder=10)
     plt.ylabel('Δ EVI')
     
-    plt.errorbar(x, AvgdAll, yerr = SEAll, color = 'g',  linewidth = 2.5, 
+    axs[count].errorbar(x, AvgdAll, yerr = SEAll, color = 'g',  linewidth = 2.5, 
                  zorder = 4, ecolor='orangered', elinewidth=lw, capsize=cs, capthick = ct, barsabove = True)
-    plt.ylabel('Δ EVI')
-    plt.hlines(0, yr-1, yr + T-2, colors = 'k', linestyles = 'dashed', zorder = 5)
-    plt.xticks(ticks=x, labels=x ) 
-    plt.savefig(filepathEVIFig + str(yr) + title_ref + 'deforestation EVI minus seasonal.png', dpi= 300) 
+    axs[count].hlines(0, yr-1, yr + 3, colors = 'k', linestyles = 'dashed', zorder = 5)
+    axs[count].set_xticklabels(x.tolist()) 
+    
     loopCount = loopCount + 1
-    plt.close()
-
+    print(count)
+    count += 1
+    if count == 3:
+        check = 1
+        plt.savefig(filepathEVIFig + str(yr- 3) + ' - ' + str(yr) + title_ref + '.png', dpi= 300) 
+        plt.close()
+        fig, axs = plt.subplots(nrows=1, ncols=3)
+# fig.subplots_adjust(vspace = 0.6)
+        fig.set_size_inches(8, 2)
+        count = 0
 
     # next issues is i need to figure out how to aggregate and present the data. how to collate it..... ARGH
     
