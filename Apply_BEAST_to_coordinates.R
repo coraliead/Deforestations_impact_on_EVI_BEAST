@@ -27,8 +27,8 @@ for (yrInQ in 2014:2014){
   sArray <- array(0,dim=c(392,SizeCoord))
   tNProbArray <- array(0,dim=c(32,SizeCoord))
   sNProbArray <- array(0,dim=c(32,SizeCoord))
-  sProbArray <- array(0,dim=c(date_length,SizeCoord))
-  tProbArray <- array(0,dim=c(date_length,SizeCoord))
+  sProbArray <- array(0,dim=c(392,SizeCoord))
+  tProbArray <- array(0,dim=c(392,SizeCoord))
 
   
   rowCount = 0
