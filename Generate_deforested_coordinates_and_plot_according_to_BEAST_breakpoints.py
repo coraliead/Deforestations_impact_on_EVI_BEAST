@@ -88,7 +88,6 @@ totalLat, totalLon = EVI.lat.values, EVI.lon.values
 patchLat, patchLon = pixelSize, pixelSize
 patchLeeway = (patchLat * patchLon) - ((patchLat * patchLon) * patchThres)
 
-
 DeforestThreshold = 30
 MaxThreshold = 5
 dateInQ = 2008
@@ -99,7 +98,7 @@ EVISeas = EVI
 
 EVIAllAppend = np.zeros((6,4,4))
 DefAllAppend = np.zeros((6,4,4))
-ArSi = 6
+ArSi = 9
 ForestMaskAll = np.zeros([ArSi, np.shape(EVI)[1], np.shape(EVI)[2]])
 for year in range(dateInQ,dateInQ+ArSi):   
     print(year)
@@ -198,12 +197,14 @@ elif float(txt) == 1:
     title_ref = ' BEAST applied to deforested - forested EVI '
 
 yrs_to_show = 5
+
 fig, axs = plt.subplots(nrows=1, ncols=3)
 # fig.subplots_adjust(vspace = 0.6)
 fig.set_size_inches(8, 2)
 count = 0
-for yr in range(dateInQ,dateInQ+ArSi):
-    
+bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
+for yr in range(dateInQ,dateInQ+1):
+    bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
     T = 2019 - yr + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
@@ -250,9 +251,9 @@ for yr in range(dateInQ,dateInQ+ArSi):
     
     #looping through months 
     for month in range(1,13):
-
         # looping through each pixel from the tcp array
         for m in range(tcpSize):
+            
             latC, lonC = deforestLocation[0][m], deforestLocation[1][m]
             breakPoints = tcpArray[:,m]
             breakPoints = breakPoints[breakPoints !=0]
@@ -266,6 +267,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
           #  plt.plot(EVIPoint.time, EVIPoint.data)
           # bp is to ensure that only the first breakpoint of the year is included
             BP = 0
+            
             for f in range(len(breakPoints)):
                 if BP == 1: continue 
                 # the x axis is days from 2000-01-01 00:00 so, the vline's units have to be converted
@@ -299,6 +301,11 @@ for yr in range(dateInQ,dateInQ+ArSi):
                 if l_date_Begin < l_date < l_date_End:
                     if l_date.month == month:
                         if Bre == 0:
+                            print(l_date)
+                            print(str(month) + ' tcp ref ' + str(breakPoints[f]))
+                            bp_count = bp_count + 1
+                        #    print('bp count is ' + str(bp_count))
+                            tcp_ref
                             BP = 1
                             EVIMonth = EVIPoint.where(EVIPoint["time.month"] == month, drop=True)
                             EVIMonth = EVIMonth.where(EVIMonth["time.year"] >= yr-1, drop=True)
@@ -336,6 +343,10 @@ for yr in range(dateInQ,dateInQ+ArSi):
                             coords_point = np.expand_dims(coords_point, axis=1)
                             coord_store = np.append(coord_store, coords_point, axis=1)
                             EVISeasonalRemoved = EVIMonthAvg.data - ForestMonth2.data
+                            if EVISeasonalRemoved[1] < EVISeasonalRemoved[0]:
+                                bp_reduce_count = bp_reduce_count + 1
+                            elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
+                                bp_increase_count = bp_increase_count + 1
                             ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                             AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             countF += 1 
@@ -345,6 +356,10 @@ for yr in range(dateInQ,dateInQ+ArSi):
     y2016 = AllForestMonth[:,5:np.shape(AllForestMonth)[1]]
     x = np.arange(yr-1, yr + T - 1)
     x = x[0:yrs_to_show]
+    bp_count_avg, bp_reduce_count_avg, bp_increase_count_avg = (np.nanmean(bp_count)/tcpSize*100), (np.nanmean(bp_reduce_count)/tcpSize*100), (np.nanmean(bp_increase_count)/tcpSize*100)
+    bp_count_avg_arr = np.append(bp_count_avg_arr, bp_count_avg)
+    bp_reduce_count_avg_arr = np.append(bp_reduce_count_avg_arr, bp_reduce_count_avg)
+    bp_increase_count_avg_arr = np.append(bp_increase_count_avg_arr, bp_increase_count_avg)
 
     for j in range(np.shape(y2016)[1]):
         yRow = y2016[:,j]
@@ -364,15 +379,17 @@ for yr in range(dateInQ,dateInQ+ArSi):
     cs = 2
     ct = 2
     #plt.plot(x, AvgdAll, 'g', linewidth = 2.5, zorder=10)
-    plt.ylabel('Δ EVI')
+    
     
     axs[count].errorbar(x, AvgdAll, yerr = SEAll, color = 'g',  linewidth = 2.5, 
                  zorder = 4, ecolor='orangered', elinewidth=lw, capsize=cs, capthick = ct, barsabove = True)
     axs[count].hlines(0, yr-1, yr + 3, colors = 'k', linestyles = 'dashed', zorder = 5)
     axs[count].set_xticklabels(x.tolist()) 
-    
+    axs[count].set_title(str(yr))
+
+    if count == 0:
+        axs[count].set_ylabel('Δ EVI')
     loopCount = loopCount + 1
-    print(count)
     count += 1
     if count == 3:
         check = 1
