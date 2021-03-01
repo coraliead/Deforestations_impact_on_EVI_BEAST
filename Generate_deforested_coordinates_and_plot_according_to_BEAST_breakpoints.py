@@ -305,8 +305,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
                  #           print(str(month) + ' tcp ref ' + str(breakPoints[f]))
                             bp_count = bp_count + 1
                         #    print('bp count is ' + str(bp_count))
-                            tcp_ref
-                            BP = 1
+
                             EVIMonth = EVIPoint.where(EVIPoint["time.month"] == month, drop=True)
                             EVIMonth = EVIMonth.where(EVIMonth["time.year"] >= yr-1, drop=True)
                             EVIDeforestYr = EVIMonth.where(EVIMonth["time.year"] == yr, drop=True)
@@ -327,10 +326,8 @@ for yr in range(dateInQ,dateInQ+ArSi):
             
                                     EVIMonth = EVIMonth.where(EVIMonth["time"] != dateDelete, drop=True)
                                     ForestMonth = ForestMonth.where(ForestMonth["time"] != dateDelete, drop=True)
-                            
-                               
-                            EVIMonthAvg = EVIMonth.groupby('time.year').mean('time')
-                            
+
+                            EVIMonthAvg = EVIMonth.groupby('time.year').mean('time')      
                             ForestMonthAvg = ForestMonth.groupby('time.year').mean('time')
                             # looping through forestmonth and removing all cells which are not classed as forested
                             # averaging across lat and lon 
@@ -345,10 +342,12 @@ for yr in range(dateInQ,dateInQ+ArSi):
                             EVISeasonalRemoved = EVIMonthAvg.data - ForestMonth2.data
                             if EVISeasonalRemoved[1] < EVISeasonalRemoved[0]:
                                 bp_reduce_count = bp_reduce_count + 1
+                                BP = 1
+                                ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
+                                AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
                                 bp_increase_count = bp_increase_count + 1
-                            ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
-                            AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
+
                             countF += 1 
    
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
@@ -393,7 +392,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     count += 1
     if count == 3:
         check = 1
-        plt.savefig(filepathEVIFig + str(yr- 3) + ' - ' + str(yr) + title_ref + '.png', dpi= 300) 
+        plt.savefig(filepathEVIFig + str(yr- 3) + ' - ' + str(yr) + title_ref + ' removed EVI increases.png', dpi= 300) 
         plt.close()
         fig, axs = plt.subplots(nrows=1, ncols=3)
 # fig.subplots_adjust(vspace = 0.6)
