@@ -203,7 +203,7 @@ fig, axs = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(8, 2)
 count = 0
 bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
-for yr in range(dateInQ,dateInQ+1):
+for yr in range(dateInQ,dateInQ+ArSi):
     bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
     T = 2019 - yr + 2
@@ -249,11 +249,12 @@ for yr in range(dateInQ,dateInQ+1):
     # i now need to ensure that my program only looks at the breakpoint of the deforestation year and only looks at the 
     # first breakpoint
     
-    #looping through months 
-    for month in range(1,13):
-        # looping through each pixel from the tcp array
-        for m in range(tcpSize):
-            
+    # looping through each pixel from the tcp array
+    for m in range(tcpSize):
+        BP = 0
+        #looping through months 
+        for month in range(1,13):
+           
             latC, lonC = deforestLocation[0][m], deforestLocation[1][m]
             breakPoints = tcpArray[:,m]
             breakPoints = breakPoints[breakPoints !=0]
@@ -266,8 +267,7 @@ for yr in range(dateInQ,dateInQ+1):
             Forest10kmMask = ForestPixMask[latC-PL:latC+PL, lonC-PL:lonC+PL]
           #  plt.plot(EVIPoint.time, EVIPoint.data)
           # bp is to ensure that only the first breakpoint of the year is included
-            BP = 0
-            
+       
             for f in range(len(breakPoints)):
                 if BP == 1: continue 
                 # the x axis is days from 2000-01-01 00:00 so, the vline's units have to be converted
@@ -301,8 +301,8 @@ for yr in range(dateInQ,dateInQ+1):
                 if l_date_Begin < l_date < l_date_End:
                     if l_date.month == month:
                         if Bre == 0:
-                            print(l_date)
-                            print(str(month) + ' tcp ref ' + str(breakPoints[f]))
+                 #           print(l_date)
+                 #           print(str(month) + ' tcp ref ' + str(breakPoints[f]))
                             bp_count = bp_count + 1
                         #    print('bp count is ' + str(bp_count))
                             tcp_ref
