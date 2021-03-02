@@ -203,7 +203,7 @@ fig, axs = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(8, 2)
 count = 0
 bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
-deforest_amount_total = np.zeros([1,2])
+deforest_amount_total = np.zeros([1,4])
 for yr in range(dateInQ,dateInQ+ArSi):
     bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
@@ -236,7 +236,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
         scpArray[range(0,len(newList_scp)),k] = newList_scp
         
     tcpSize = np.shape(tcpArray)[1]
-    deforestAmount = np.zeros([tcpSize, 2])
+    deforestAmount = np.zeros([tcpSize, 4])
     deforestAmount[:,0] = ForestMaskLoop[ForestMaskLoop > 60]
     
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
@@ -349,6 +349,8 @@ for yr in range(dateInQ,dateInQ+ArSi):
                                 bp_reduce_count = bp_reduce_count + 1
                                 BP = 1
                                 deforestAmount[m,1] = 1
+                                deforestAmount[m,2] = EVISeasonalRemoved[0] - EVISeasonalRemoved[1] 
+                                deforestAmount[m,3] = yr
                                 ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                                 AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
@@ -425,3 +427,17 @@ plt.xlabel('Deforestation amount (%)')
 plt.ylabel('Probability density')
 plt.title('Hist of changepoint detection and deforestation amount for 2008-16')
 plt.savefig(filepathEVIFig + 'Hist of changepoint detection and deforestation amount for 2008-16.png', dpi=300 )
+
+#%%
+
+changepoint_EVI_change = deforest_amount_total2[changepoint_ref,2]
+changepoint_EVI_change = changepoint_EVI_change[0,:]
+
+deforest_yr = deforest_amount_total2[changepoint_ref,3]
+deforest_yr = deforest_yr[0,:]
+
+plt.scatter(changepoint_def_amount, changepoint_EVI_change)
+plt.xlabel('Deforestation amount (%)')
+plt.ylabel('EVI reduction due to deforestation')
+plt.savefig(filepathEVIFig + 'EVI reduction vs deforestation amount.png', dpi=300)
+# this doesnt work bc the amount of EVI change won't just depend on the amount deforested - what vegetation was there before?
