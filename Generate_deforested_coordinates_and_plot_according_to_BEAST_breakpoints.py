@@ -203,11 +203,14 @@ fig, axs = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(8, 2)
 count = 0
 bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
+deforest_amount_total = np.zeros([1,2])
 for yr in range(dateInQ,dateInQ+ArSi):
     bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
     T = 2019 - yr + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
+    ForestMaskLoop = ForestMaskAll[loopCount,:,:]
+
     f_tcp_name = filepathEVI + 'Processed/BEAST/' + tcp_ref + str(yr) + '_lon' + StandardNomenclature
     list_tcp = open(f_tcp_name).read().split()
     list_np_tcp = np.array(list_tcp)
@@ -233,6 +236,9 @@ for yr in range(dateInQ,dateInQ+ArSi):
         scpArray[range(0,len(newList_scp)),k] = newList_scp
         
     tcpSize = np.shape(tcpArray)[1]
+    deforestAmount = np.zeros([tcpSize, 2])
+    deforestAmount[:,0] = ForestMaskLoop[ForestMaskLoop > 60]
+    
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
     np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(yr) + '_lon' + StandardNomenclature, scpArray)
 
@@ -240,8 +246,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     ForestPixMask = np.zeros_like(CumulativeArray[yr-2000,:,:])
     ForestPixMask[CumulativeArray[yr-2000,:,:] <= 20] = 1
     
-    DeforestPixMask = np.zeros_like(CumulativeArray[yr-2000,:,:])
-    DeforestPixMask[CumulativeArray[yr-2000,:,:] <= 20] = 1
+
     AllEVIMonth = np.zeros([T,5])
     AllForestMonth  = np.zeros([T,5])
     coord_store = np.zeros([2,2])
@@ -343,13 +348,14 @@ for yr in range(dateInQ,dateInQ+ArSi):
                             if EVISeasonalRemoved[1] < EVISeasonalRemoved[0]:
                                 bp_reduce_count = bp_reduce_count + 1
                                 BP = 1
+                                deforestAmount[m,1] = 1
                                 ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                                 AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
                                 bp_increase_count = bp_increase_count + 1
 
                             countF += 1 
-   
+    deforest_amount_total = np.append(deforest_amount_total, deforestAmount, axis =0)
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
    # into the AllForestMonth and then i can append all and plot all :D 
     y2016 = AllForestMonth[:,5:np.shape(AllForestMonth)[1]]
@@ -402,6 +408,20 @@ for yr in range(dateInQ,dateInQ+ArSi):
     # next issues is i need to figure out how to aggregate and present the data. how to collate it..... ARGH
     
     # need to plot with time on the x axis next. maybe construct an x axis and put it on top of all of them 
+#%%
+deforest_amount_total2 = deforest_amount_total[1:len(deforest_amount_total),:]    
+no_changepoint_ref = np.where(deforest_amount_total2[:,1] == 0)
+changepoint_ref = np.where(deforest_amount_total2[:,1] == 1)
+no_changepoint_def_amount = deforest_amount_total2[no_changepoint_ref,0]
+no_changepoint_def_amount = no_changepoint_def_amount[0,:]
+changepoint_def_amount = deforest_amount_total2[changepoint_ref,0]
+changepoint_def_amount = changepoint_def_amount[0,:]
 
-    
-    
+bins = np.arange(60, 105, 5)
+plt.hist(changepoint_def_amount, bins = bins, density=True, alpha=0.5, label='Changepoint detected', histtype = 'stepfilled')
+plt.hist(no_changepoint_def_amount, bins = bins, density=True, alpha=0.5, label='Changepoint not detected', histtype = 'stepfilled')
+plt.legend(loc='upper left')
+plt.xlabel('Deforestation amount (%)')
+plt.ylabel('Probability density')
+plt.title('Hist of changepoint detection and deforestation amount for 2008-16')
+plt.savefig(filepathEVIFig + 'Hist of changepoint detection and deforestation amount for 2008-16.png', dpi=300 )
