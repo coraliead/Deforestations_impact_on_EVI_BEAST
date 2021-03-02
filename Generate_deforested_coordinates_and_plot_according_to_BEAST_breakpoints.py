@@ -257,6 +257,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     # looping through each pixel from the tcp array
     for m in range(tcpSize):
         BP = 0
+        deforestAmount[m,3] = yr
         #looping through months 
         for month in range(1,13):
            
@@ -350,7 +351,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
                                 BP = 1
                                 deforestAmount[m,1] = 1
                                 deforestAmount[m,2] = EVISeasonalRemoved[0] - EVISeasonalRemoved[1] 
-                                deforestAmount[m,3] = yr
+                                
                                 ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                                 AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
@@ -414,6 +415,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
 deforest_amount_total2 = deforest_amount_total[1:len(deforest_amount_total),:]    
 no_changepoint_ref = np.where(deforest_amount_total2[:,1] == 0)
 changepoint_ref = np.where(deforest_amount_total2[:,1] == 1)
+
 no_changepoint_def_amount = deforest_amount_total2[no_changepoint_ref,0]
 no_changepoint_def_amount = no_changepoint_def_amount[0,:]
 changepoint_def_amount = deforest_amount_total2[changepoint_ref,0]
@@ -429,15 +431,53 @@ plt.title('Hist of changepoint detection and deforestation amount for 2008-16')
 plt.savefig(filepathEVIFig + 'Hist of changepoint detection and deforestation amount for 2008-16.png', dpi=300 )
 
 #%%
+changepoint_ref = np.where(deforest_amount_total2[:,1] == 1)
+no_changepoint_ref = np.where(deforest_amount_total2[:,1] == 0)
+
+for yrs in range(2008,2017):
+    yr_ref = np.where(deforest_amount_total2[:,3] == yrs)
+
+    no_changepoint_yr_ref = np.intersect1d(yr_ref,no_changepoint_ref)
+    changepoint_yr_ref = np.intersect1d(yr_ref,changepoint_ref)
+    
+    no_changepoint_def_amount_yr = deforest_amount_total2[no_changepoint_yr_ref,0]
+    
+    changepoint_def_amount_yr = deforest_amount_total2[changepoint_yr_ref,0]
+    
+    bins = np.arange(60, 105, 5)
+    plt.hist(changepoint_def_amount_yr, bins = bins, density=True, alpha=0.5, label='Changepoint detected', histtype = 'stepfilled')
+    plt.hist(no_changepoint_def_amount_yr, bins = bins, density=True, alpha=0.5, label='Changepoint not detected', histtype = 'stepfilled')
+    plt.legend(loc='upper left')
+    plt.xlabel('Deforestation amount (%)')
+    plt.ylabel('Probability density')
+    plt.title('Hist of changepoint detection and deforestation amount for ' + str(yrs))
+    plt.savefig(filepathEVIFig + 'Hist of changepoint detection and deforestation amount for ' + str(yrs) + '.png', dpi=300 )
+    plt.close()
+    
+#%%
 
 changepoint_EVI_change = deforest_amount_total2[changepoint_ref,2]
 changepoint_EVI_change = changepoint_EVI_change[0,:]
-
-deforest_yr = deforest_amount_total2[changepoint_ref,3]
-deforest_yr = deforest_yr[0,:]
 
 plt.scatter(changepoint_def_amount, changepoint_EVI_change)
 plt.xlabel('Deforestation amount (%)')
 plt.ylabel('EVI reduction due to deforestation')
 plt.savefig(filepathEVIFig + 'EVI reduction vs deforestation amount.png', dpi=300)
 # this doesnt work bc the amount of EVI change won't just depend on the amount deforested - what vegetation was there before?
+
+#%%
+# this wont work anymore bc year is there for all change points)
+for yrs in range(2008,2017):
+    yr_ref = np.where(deforest_amount_total2[:,3] == yrs)
+    changepoint_EVI_change_yr = deforest_amount_total2[yr_ref,2]
+    changepoint_EVI_change_yr = changepoint_EVI_change_yr[0,:]
+    
+    changepoint_def_amount_yr = deforest_amount_total2[yr_ref,0]
+    changepoint_def_amount_yr = changepoint_def_amount_yr[0,:]
+    
+    plt.scatter(changepoint_def_amount_yr, changepoint_EVI_change_yr)
+    plt.xlabel('Deforestation amount (%)')
+    plt.ylabel('EVI reduction due to deforestation')
+    plt.title(str(yrs))
+    plt.savefig(filepathEVIFig + 'EVI reduction vs deforestation amount' + str(yrs) + '.png', dpi=300)
+    plt.close()
