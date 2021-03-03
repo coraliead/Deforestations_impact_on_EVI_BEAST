@@ -163,7 +163,6 @@ for year in range(dateInQ,dateInQ+ArSi):
         DefCount = DefCount + 1
        
     CoordX = np.array(CoordX)   
-    print(len(CoordX))
     CoordY = np.array(CoordY)    
     
     np.savetxt(filepathEVI + 'Processed/BEAST/' + 'CoordLat_' + str(year) + '_lon' + StandardNomenclature, CoordX)
@@ -203,7 +202,8 @@ fig, axs = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(8, 2)
 count = 0
 bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
-deforest_amount_total = np.zeros([1,4])
+deforest_amount_total = np.zeros([1,7])
+tcpSize_arr = []
 for yr in range(dateInQ,dateInQ+ArSi):
     bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
@@ -236,7 +236,8 @@ for yr in range(dateInQ,dateInQ+ArSi):
         scpArray[range(0,len(newList_scp)),k] = newList_scp
         
     tcpSize = np.shape(tcpArray)[1]
-    deforestAmount = np.zeros([tcpSize, 4])
+    tcpSize_arr = np.append(tcpSize_arr, tcpSize)
+    deforestAmount = np.zeros([tcpSize, 7])
     deforestAmount[:,0] = ForestMaskLoop[ForestMaskLoop > 60]
     
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
@@ -260,8 +261,9 @@ for yr in range(dateInQ,dateInQ+ArSi):
         deforestAmount[m,3] = yr
         #looping through months 
         for month in range(1,13):
-           
             latC, lonC = deforestLocation[0][m], deforestLocation[1][m]
+            deforestAmount[m,4] = latC
+            deforestAmount[m,5] = lonC
             breakPoints = tcpArray[:,m]
             breakPoints = breakPoints[breakPoints !=0]
             breakPoints = np.sort(breakPoints)
@@ -351,7 +353,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
                                 BP = 1
                                 deforestAmount[m,1] = 1
                                 deforestAmount[m,2] = EVISeasonalRemoved[0] - EVISeasonalRemoved[1] 
-                                
+                                deforestAmount[m,6] = month
                                 ForestToAppend= np.expand_dims(EVISeasonalRemoved.data, axis=1)
                                 AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
@@ -364,7 +366,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     y2016 = AllForestMonth[:,5:np.shape(AllForestMonth)[1]]
     x = np.arange(yr-1, yr + T - 1)
     x = x[0:yrs_to_show]
-    bp_count_avg, bp_reduce_count_avg, bp_increase_count_avg = (np.nanmean(bp_count)/tcpSize*100), (np.nanmean(bp_reduce_count)/tcpSize*100), (np.nanmean(bp_increase_count)/tcpSize*100)
+    bp_count_avg, bp_reduce_count_avg, bp_increase_count_avg = (bp_count/tcpSize*100), (bp_reduce_count/tcpSize*100), (bp_increase_count/tcpSize*100)
     bp_count_avg_arr = np.append(bp_count_avg_arr, bp_count_avg)
     bp_reduce_count_avg_arr = np.append(bp_reduce_count_avg_arr, bp_reduce_count_avg)
     bp_increase_count_avg_arr = np.append(bp_increase_count_avg_arr, bp_increase_count_avg)
@@ -411,8 +413,15 @@ for yr in range(dateInQ,dateInQ+ArSi):
     # next issues is i need to figure out how to aggregate and present the data. how to collate it..... ARGH
     
     # need to plot with time on the x axis next. maybe construct an x axis and put it on top of all of them 
+deforest_amount_total2 = deforest_amount_total[1:len(deforest_amount_total),:]   
+np.savetxt(filepathEVI + 'Processed/deforest_amount_array_lon' + StandardNomenclature + '_' + str(dateInQ) + '_' + str(dateInQ + ArSi - 1) + '.txt', deforest_amount_total2)
+
 #%%
-deforest_amount_total2 = deforest_amount_total[1:len(deforest_amount_total),:]    
+
+# this fig plots a histogram of deforestation amounts for points with no detected breakpoint (w associated reduction) and points with
+# a detected breakpoint
+
+ 
 no_changepoint_ref = np.where(deforest_amount_total2[:,1] == 0)
 changepoint_ref = np.where(deforest_amount_total2[:,1] == 1)
 
@@ -431,6 +440,18 @@ plt.title('Hist of changepoint detection and deforestation amount for 2008-16')
 plt.savefig(filepathEVIFig + 'Hist of changepoint detection and deforestation amount for 2008-16.png', dpi=300 )
 
 #%%
+
+lat_arr, lon_arr = deforest_amount_total2[:,4], deforest_amount_total2[:,5]
+changepoints_arr = deforest_amount_total2[:,1]
+
+plt.scatter(lat_arr, lon_arr, c=changepoints_arr)
+plt.savefig(filepathEVIFig + 'changepoint scatter test.png', dpi=300)
+
+#%%
+
+# this fig plots a histogram of deforestation amounts for points with no detected breakpoint (w associated reduction) and points with
+# a detected breakpoint on a yearly basis
+
 changepoint_ref = np.where(deforest_amount_total2[:,1] == 1)
 no_changepoint_ref = np.where(deforest_amount_total2[:,1] == 0)
 
@@ -456,6 +477,8 @@ for yrs in range(2008,2017):
     
 #%%
 
+# this fig plots the amount of deforestation vs the reduction in EVI due to deforestation
+
 changepoint_EVI_change = deforest_amount_total2[changepoint_ref,2]
 changepoint_EVI_change = changepoint_EVI_change[0,:]
 
@@ -466,14 +489,19 @@ plt.savefig(filepathEVIFig + 'EVI reduction vs deforestation amount.png', dpi=30
 # this doesnt work bc the amount of EVI change won't just depend on the amount deforested - what vegetation was there before?
 
 #%%
+
+# this fig plots the amount of deforestation vs the reduction in EVI due to deforestation on a yearly basis
+
 # this wont work anymore bc year is there for all change points)
 for yrs in range(2008,2017):
     yr_ref = np.where(deforest_amount_total2[:,3] == yrs)
-    changepoint_EVI_change_yr = deforest_amount_total2[yr_ref,2]
-    changepoint_EVI_change_yr = changepoint_EVI_change_yr[0,:]
+    changepoint_yr_ref = np.intersect1d(yr_ref,changepoint_ref)
+
+    changepoint_EVI_change_yr = deforest_amount_total2[changepoint_yr_ref,2]
+  #  changepoint_EVI_change_yr = changepoint_EVI_change_yr[:,0]
     
-    changepoint_def_amount_yr = deforest_amount_total2[yr_ref,0]
-    changepoint_def_amount_yr = changepoint_def_amount_yr[0,:]
+    changepoint_def_amount_yr = deforest_amount_total2[changepoint_yr_ref,0]
+ #   changepoint_def_amount_yr = changepoint_def_amount_yr[0,:]
     
     plt.scatter(changepoint_def_amount_yr, changepoint_EVI_change_yr)
     plt.xlabel('Deforestation amount (%)')
