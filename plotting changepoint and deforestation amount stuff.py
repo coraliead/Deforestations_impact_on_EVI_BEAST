@@ -119,6 +119,7 @@ def_lat = deforest_amount_array[:,4]
 def_lon = deforest_amount_array[:,5]
 def_BP = deforest_amount_array[:,1]
 def_yr = deforest_amount_array[:,3]
+def_month = deforest_amount_array[:,3]
 
 def_changepoint_ref = np.where(def_BP == 1)
 def_nochangepoint_ref = np.where(def_BP == 0)
@@ -194,3 +195,44 @@ for yrs in range(2008,2017):
     plt.savefig(filepathEVIFig + str(yrs) + 'zoomed changepoint and no changepoint deforestation mapped onto deforestation amount.png', dpi=300)
 #%%
 
+deforest_amount_array = np.loadtxt(filepathEVI + 'Processed/deforest_amount_array_lon' + StandardNomenclature + '_2008_2016.txt')
+def_lat = deforest_amount_array[:,4]
+def_lon = deforest_amount_array[:,5]
+def_BP = deforest_amount_array[:,1]
+def_yr = deforest_amount_array[:,3]
+def_month = deforest_amount_array[:,3]
+
+def_changepoint_ref = np.where(def_BP == 1)
+def_nochangepoint_ref = np.where(def_BP == 0)
+
+labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+width = 0.25
+all_months_arr = np.zeros([1,12])
+count = 1
+
+for yrs in range(2008, 2017):
+    def_yr_ref = np.where(def_yr == yrs)
+    yr_changepoint_total = np.intersect1d(def_yr_ref, def_changepoint_ref)
+    month_percent_arr = []
+    for month in range(1,13):
+        def_month_ref = np.where(deforest_amount_array[:,6] == month)
+        BP = np.intersect1d(yr_changepoint_total, def_month_ref)
+        
+        month_percent_arr = np.append(month_percent_arr, (len(BP) / len(yr_changepoint_total) * 100))
+        
+    month_percent_arr = np.expand_dims(month_percent_arr, axis = 0)
+    all_months_arr = np.append(all_months_arr, month_percent_arr, axis = 0)
+    cumu_all_months_arr = np.cumsum(all_months_arr, axis =0)
+    if yrs == 2008:
+        plt.bar(labels, all_months_arr[count,:], width, label=str(yrs))
+    else:
+        plt.bar(labels, all_months_arr[count,:], width, bottom=cumu_all_months_arr[count-1,:], label=str(yrs))
+    count = count+1
+lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.savefig(filepathEVIFig + 'barplot showing proportional month of deforestation 2008-2016.png', dpi=300, bbox_extra_artists=(lgd,), bbox_inches='tight')
+#%%
+for k in range(0,9,3):
+    if k == 0:
+        plt.bar(labels, cumu_all_months_arr[k+2,:], width, label=str(k))
+    else:
+        plt.bar(labels, cumu_all_months_arr[k+2,:], width, bottom=cumu_all_months_arr[k-1,:], label=str(k))
