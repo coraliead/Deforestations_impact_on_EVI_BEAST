@@ -204,6 +204,7 @@ count = 0
 bp_count_avg_arr, bp_reduce_count_avg_arr, bp_increase_count_avg_arr = [], [], []
 deforest_amount_total = np.zeros([1,7])
 tcpSize_arr = []
+all_data_arr = np.zeros([1,5])
 for yr in range(dateInQ,dateInQ+ArSi):
     bp_count, bp_reduce_count, bp_increase_count = 0, 0, 0
     print(yr)
@@ -375,7 +376,9 @@ for yr in range(dateInQ,dateInQ+ArSi):
         yRow = y2016[:,j]
         yRow = yRow[0:yrs_to_show]
         axs[count].plot(x, yRow, 'grey', alpha = 0.5, zorder = 1)
-   
+    # need to store yRow
+        yRow = np.expand_dims(yRow, axis=0)
+        all_data_arr = np.append(all_data_arr, yRow, axis = 0)
     AvgdAll = np.zeros([np.shape(y2016)[0]])
     SEAll = np.zeros([np.shape(y2016)[0]])
     for h in range(np.shape(y2016)[0]):
@@ -509,3 +512,34 @@ for yrs in range(2008,2017):
     plt.title(str(yrs))
     plt.savefig(filepathEVIFig + 'EVI reduction vs deforestation amount' + str(yrs) + '.png', dpi=300)
     plt.close()
+
+#%%
+
+# this fig collates ALL the breakpoint data 
+fig, axs = plt.subplots()
+plt.rcParams.update({'font.size': 12})
+all_data_arr2 = all_data_arr[1:len(all_data_arr), :]
+x = [-1, 0, 1, 2, 3]
+for k in range(np.shape(all_data_arr2)[0]):
+    y = all_data_arr2[k,:]
+    axs.plot(x, y, 'grey', alpha = 0.5, zorder = 1)
+    
+all_avgd = np.zeros([np.shape(all_data_arr2)[1]])
+all_se = np.zeros([np.shape(all_data_arr2)[1]])
+
+for h in range(np.shape(all_data_arr2)[1]):
+    all_avgd[h] = np.nanmean(all_data_arr2[:,h])
+    StDev = np.nanstd(all_data_arr2[:,h])
+    SamSi = np.size(all_data_arr2[:,h])
+    all_se[h] = StDev / np.sqrt(SamSi)
+
+
+axs.errorbar(x, all_avgd, yerr = all_se, color = 'g',  linewidth = 2.5, 
+             zorder = 4, ecolor='orangered', elinewidth=lw, capsize=cs, capthick = ct, barsabove = True)
+axs.set_xticks([-1, 0, 1, 2, 3])
+axs.set_ylabel('Δ EVI')
+axs.set_title('2008 - 2016')
+axs.hlines(all_avgd[0], -1, 3,  colors = 'k', linestyles = 'dashed', zorder = 5)
+
+plt.savefig(filepathEVIFig + '2008 - 2016 deforested - forested EVI collated figure.png', dpi =300)
+    
