@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import cftime
 from datetime import datetime
 import rpy2.robjects as ro
+from dateutil.relativedelta import relativedelta
 
 def regridDataLinearAndNearestNeighbour(DataToRegrid, Grid):
     latInterp, lonInterp = Grid.lat.values, Grid.lon.values
@@ -211,7 +212,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     T = 2019 - yr + 2
     deforestLocation =  np.where(ForestMaskAll[loopCount,:,:] > 60)
     ForestMaskLoop = ForestMaskAll[loopCount,:,:]
-
+        
     f_tcp_name = filepathEVI + 'Processed/BEAST/' + tcp_ref + str(yr) + '_lon' + StandardNomenclature
     list_tcp = open(f_tcp_name).read().split()
     list_np_tcp = np.array(list_tcp)
@@ -240,6 +241,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     tcpSize_arr = np.append(tcpSize_arr, tcpSize)
     deforestAmount = np.zeros([tcpSize, 7])
     deforestAmount[:,0] = ForestMaskLoop[ForestMaskLoop > 60]
+    month_ForestToAppend = np.zeros([tcpSize,20])
     
     np.save(filepathEVI + 'Processed/BEAST/' + tcp_ref_proc + str(yr) + '_lon' + StandardNomenclature, tcpArray)  
     np.save(filepathEVI + 'Processed/BEAST/' + scp_ref_proc + str(yr) + '_lon' + StandardNomenclature, scpArray)
@@ -251,6 +253,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
 
     AllEVIMonth = np.zeros([T,5])
     AllForestMonth  = np.zeros([T,5])
+    month_AllForestMonth  = np.zeros([1,20])
     coord_store = np.zeros([2,2])
     
     # i now need to ensure that my program only looks at the breakpoint of the deforestation year and only looks at the 
@@ -260,6 +263,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
     for m in range(tcpSize):
         BP = 0
         deforestAmount[m,3] = yr
+        month_ForestToAppend[m,18] = yr
         #looping through months 
         for month in range(1,13):
             latC, lonC = deforestLocation[0][m], deforestLocation[1][m]
@@ -314,7 +318,7 @@ for yr in range(dateInQ,dateInQ+ArSi):
                  #           print(str(month) + ' tcp ref ' + str(breakPoints[f]))
                             bp_count = bp_count + 1
                         #    print('bp count is ' + str(bp_count))
-
+                            # the section after this is to look at evi before and after deforestation on a YEARLY basis
                             EVIMonth = EVIPoint.where(EVIPoint["time.month"] == month, drop=True)
                             EVIMonth = EVIMonth.where(EVIMonth["time.year"] >= yr-1, drop=True)
                             EVIDeforestYr = EVIMonth.where(EVIMonth["time.year"] == yr, drop=True)
@@ -359,7 +363,25 @@ for yr in range(dateInQ,dateInQ+ArSi):
                                 AllForestMonth = np.append(AllForestMonth, ForestToAppend.data, axis = 1)
                             elif EVISeasonalRemoved[1] > EVISeasonalRemoved[0]:
                                 bp_increase_count = bp_increase_count + 1
-
+                            # the section after this is to look at evi before and after deforestation on a monthly basis
+                            # i have the reference for the breakpoint. i want to store 3 months before and 6 months after? 
+                            
+                            time_points_before = int(breakPoints[f] - 6)
+                            time_points_after = int(breakPoints[f] + 12)
+                            EVI_point_range = EVIPoint[time_points_before:time_points_after]
+                            
+                            EVI_10km_range = EVI10km[time_points_before:time_points_after, :, :]
+                            
+                            forest_avg_10km_range = np.zeros([len(EVI_10km_range)])
+                            for timeF in range(len(EVI_10km_range)):
+                                EVI_10km_range[timeF,:,:].values[Forest10kmMask == 0] = np.nan 
+                                forest_avg_10km_range[timeF] = np.nanmean(EVI_10km_range[timeF,:,:].values)
+                                
+                            month_ForestToAppend[m,0:18] = EVI_point_range.data - forest_avg_10km_range.data 
+                            month_ForestToAppend[m,19] = month
+                        #    month_ForestToAppend= np.expand_dims(EVI_month_SeasonalRemoved.data, axis=1)
+                            month_AllForestMonth = np.append(month_AllForestMonth, month_ForestToAppend.data, axis = 0)
+                            
                             countF += 1 
     deforest_amount_total = np.append(deforest_amount_total, deforestAmount, axis =0)
    # plus i want to collate the years into the same. need to change the code to only save a certain numebr of years
